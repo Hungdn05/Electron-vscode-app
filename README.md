@@ -2,7 +2,10 @@
 
 Desktop workspace for creating, editing, versioning, and synchronizing LaTeX projects.
 
-Checkpoint 1 contains the secure Electron shell. OpenVSCode Server, project management, Git synchronization, authentication, and LaTeX compilation are intentionally deferred to later checkpoints.
+Checkpoint 2 adds a native Monaco LaTeX scratch editor inside the secure
+Electron shell. Project management, Git synchronization, authentication,
+persistent file access, and LaTeX compilation are intentionally deferred to
+later checkpoints.
 
 ## Requirements
 
@@ -34,8 +37,11 @@ npm audit --audit-level=high
 
 ## Packaging
 
-Packaging commands exist in `package.json`, but distributable builds are not considered supported until the OpenVSCode and LaTeX runtime resources are added and the signing/notarization checkpoint is complete.
+Packaging commands exist in `package.json`, but distributable builds are not
+considered supported until the LaTeX runtime resources are added and the
+signing/notarization checkpoint is complete.
 
 ## Architecture decisions
 
 - [Electron process boundaries](docs/adr/0001-process-boundaries.md)
+- [Native editor runtime](docs/adr/0002-native-editor-runtime.md)

@@ -6,10 +6,16 @@ import icon from '../../resources/icon.png?asset'
 
 function isTrustedRendererUrl(navigationUrl: string): boolean {
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    return new URL(navigationUrl).origin === new URL(process.env['ELECTRON_RENDERER_URL']).origin
+    return (
+      new URL(navigationUrl).origin ===
+      new URL(process.env['ELECTRON_RENDERER_URL']).origin
+    )
   }
 
-  return navigationUrl === pathToFileURL(join(__dirname, '../renderer/index.html')).toString()
+  return (
+    navigationUrl ===
+    pathToFileURL(join(__dirname, '../renderer/index.html')).toString()
+  )
 }
 
 function createWindow(): void {
@@ -27,8 +33,8 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
-    }
+      sandbox: true,
+    },
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -39,7 +45,7 @@ function createWindow(): void {
   mainWindow.webContents.session.setPermissionRequestHandler(
     (_webContents, _permission, callback) => {
       callback(false)
-    }
+    },
   )
 
   mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
