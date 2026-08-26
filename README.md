@@ -2,10 +2,11 @@
 
 Desktop workspace for creating, editing, versioning, and synchronizing LaTeX projects.
 
-Checkpoint 2 adds a native Monaco LaTeX scratch editor inside the secure
-Electron shell. Project management, Git synchronization, authentication,
-persistent file access, and LaTeX compilation are intentionally deferred to
-later checkpoints.
+Checkpoint 3 adds local project management: create a LaTeX template with a
+Git repository, import an existing top-level `.tex` folder, rename its display
+name, archive it without deleting files, and save its registered entry file.
+Git synchronization, authentication, and LaTeX compilation are intentionally
+deferred to later checkpoints.
 
 ## Requirements
 
@@ -31,6 +32,7 @@ env -u ELECTRON_RUN_AS_NODE npm run dev
 ```bash
 npm run typecheck
 npm run lint
+npm run test:projects
 npm run build
 npm audit --audit-level=high
 ```
@@ -45,3 +47,4 @@ signing/notarization checkpoint is complete.
 
 - [Electron process boundaries](docs/adr/0001-process-boundaries.md)
 - [Native editor runtime](docs/adr/0002-native-editor-runtime.md)
+- [Project data ownership](docs/adr/0003-project-data-ownership.md)

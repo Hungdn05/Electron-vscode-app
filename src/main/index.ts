@@ -1,8 +1,18 @@
-import { app, BrowserWindow } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  IpcMainInvokeEvent,
+} from 'electron'
+import type { OpenDialogOptions } from 'electron'
 import { join } from 'path'
 import { pathToFileURL } from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { ProjectService } from './services/project-service'
+
+let mainWindow: BrowserWindow | null = null
 
 function isTrustedRendererUrl(navigationUrl: string): boolean {
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
@@ -19,7 +29,7 @@ function isTrustedRendererUrl(navigationUrl: string): boolean {
 }
 
 function createWindow(): void {
-  const mainWindow = new BrowserWindow({
+  const window = new BrowserWindow({
     width: 1440,
     height: 900,
     minWidth: 1100,
@@ -36,19 +46,20 @@ function createWindow(): void {
       sandbox: true,
     },
   })
+  mainWindow = window
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+  window.on('ready-to-show', () => {
+    window.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
-  mainWindow.webContents.session.setPermissionRequestHandler(
+  window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  window.webContents.session.setPermissionRequestHandler(
     (_webContents, _permission, callback) => {
       callback(false)
     },
   )
 
-  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+  window.webContents.on('will-navigate', (event, navigationUrl) => {
     if (!isTrustedRendererUrl(navigationUrl)) {
       event.preventDefault()
     }
@@ -57,10 +68,62 @@ function createWindow(): void {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    window.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    window.loadFile(join(__dirname, '../renderer/index.html'))
   }
+}
+
+function assertMainRenderer(event: IpcMainInvokeEvent): void {
+  if (!mainWindow || event.sender.id !== mainWindow.webContents.id) {
+    throw new Error('Project requests are only accepted from the main window.')
+  }
+}
+
+function registerProjectHandlers(projectService: ProjectService): void {
+  const chooseDirectory = async (): Promise<string | null> => {
+    const dialogOptions: OpenDialogOptions = {
+      properties: ['openDirectory', 'createDirectory'],
+      title: 'Choose project location',
+    }
+    const result = mainWindow
+      ? await dialog.showOpenDialog(mainWindow, dialogOptions)
+      : await dialog.showOpenDialog(dialogOptions)
+    return result.canceled ? null : (result.filePaths[0] ?? null)
+  }
+
+  ipcMain.handle('projects:list', (event) => {
+    assertMainRenderer(event)
+    return projectService.listProjects()
+  })
+  ipcMain.handle('projects:choose-location', (event) => {
+    assertMainRenderer(event)
+    return projectService.chooseProjectLocation(chooseDirectory)
+  })
+  ipcMain.handle('projects:create', (event, input) => {
+    assertMainRenderer(event)
+    return projectService.createProject(input)
+  })
+  ipcMain.handle('projects:import', (event) => {
+    assertMainRenderer(event)
+    return projectService.importProject(chooseDirectory)
+  })
+  ipcMain.handle('projects:rename', (event, id, name) => {
+    assertMainRenderer(event)
+    return projectService.renameProject(id, name)
+  })
+  ipcMain.handle('projects:archive', (event, id) => {
+    assertMainRenderer(event)
+    return projectService.archiveProject(id)
+  })
+  ipcMain.handle('projects:document', (event, id) => {
+    assertMainRenderer(event)
+    return projectService.getDocument(id)
+  })
+  ipcMain.handle('projects:save-document', (event, id, content) => {
+    assertMainRenderer(event)
+    return projectService.saveDocument(id, content)
+  })
 }
 
 // This method will be called when Electron has finished
@@ -79,6 +142,12 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  registerProjectHandlers(
+    new ProjectService({
+      userDataPath: app.getPath('userData'),
+      documentsPath: app.getPath('documents'),
+    }),
+  )
   createWindow()
 
   app.on('activate', function () {

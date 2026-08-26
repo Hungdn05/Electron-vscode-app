@@ -2,28 +2,15 @@ import { useEffect, useRef } from 'react'
 import * as monaco from 'monaco-editor'
 import EditorWorker from 'monaco-editor/editor/editor.worker?worker'
 
-type LatexEditorProps = {
-  onDirtyChange: (isDirty: boolean) => void
+export type EditorDocument = {
+  content: string
+  uri: string
 }
 
-const scratchDocument = String.raw`\documentclass[12pt]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{amsmath}
-
-\title{KLTM LaTeX Draft}
-\author{Your name}
-\date{\today}
-
-\begin{document}
-
-\maketitle
-
-\section{Introduction}
-Write your LaTeX document here.
-
-\end{document}
-`
+type LatexEditorProps = {
+  document: EditorDocument
+  onContentChange: (content: string) => void
+}
 
 let latexLanguageRegistered = false
 
@@ -58,9 +45,20 @@ function configureWorker(): void {
 }
 
 export function LatexEditor({
-  onDirtyChange,
+  document,
+  onContentChange,
 }: LatexEditorProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null)
+  const documentRef = useRef(document)
+  const onContentChangeRef = useRef(onContentChange)
+
+  useEffect(() => {
+    documentRef.current = document
+  }, [document])
+
+  useEffect(() => {
+    onContentChangeRef.current = onContentChange
+  }, [onContentChange])
 
   useEffect(() => {
     const container = containerRef.current
@@ -70,9 +68,9 @@ export function LatexEditor({
     configureMonaco()
 
     const model = monaco.editor.createModel(
-      scratchDocument,
+      documentRef.current.content,
       'latex',
-      monaco.Uri.parse('inmemory://kltm/scratch/main.tex'),
+      monaco.Uri.parse(documentRef.current.uri),
     )
     const editor = monaco.editor.create(container, {
       model,
@@ -90,7 +88,7 @@ export function LatexEditor({
       wordWrap: 'on',
     })
     const changeSubscription = editor.onDidChangeModelContent(() => {
-      onDirtyChange(true)
+      onContentChangeRef.current(model.getValue())
     })
     const resizeObserver = new ResizeObserver(() => editor.layout())
 
@@ -103,13 +101,13 @@ export function LatexEditor({
       editor.dispose()
       model.dispose()
     }
-  }, [onDirtyChange])
+  }, [document.uri])
 
   return (
     <div
       ref={containerRef}
       className="monaco-editor"
-      aria-label="LaTeX scratch editor"
+      aria-label="LaTeX editor"
     />
   )
 }
