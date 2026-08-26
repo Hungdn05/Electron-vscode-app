@@ -1,9 +1,14 @@
+import { useState } from 'react'
+import { LatexEditor } from './components/LatexEditor'
+
 function App(): React.JSX.Element {
+  const [isScratchDirty, setIsScratchDirty] = useState(false)
+
   return (
     <main className="app-shell">
       <header className="topbar">
         <span className="app-title">KLTM Workspace</span>
-        <span className="project-title">No project opened</span>
+        <span className="project-title">Scratch document · main.tex</span>
       </header>
 
       <aside className="sidebar">
@@ -25,7 +30,10 @@ function App(): React.JSX.Element {
         </button>
 
         <nav className="navigation" aria-label="Main navigation">
-          <button className="navigation-item navigation-item-active" type="button">
+          <button
+            className="navigation-item navigation-item-active"
+            type="button"
+          >
             <span aria-hidden="true">▣</span>
             Projects
           </button>
@@ -40,7 +48,10 @@ function App(): React.JSX.Element {
           </button>
         </nav>
 
-        <section className="recent-projects" aria-labelledby="recent-projects-heading">
+        <section
+          className="recent-projects"
+          aria-labelledby="recent-projects-heading"
+        >
           <h2 id="recent-projects-heading">Recent projects</h2>
           <p>No recent projects</p>
         </section>
@@ -48,21 +59,27 @@ function App(): React.JSX.Element {
         <span className="platform-label">Platform: {window.kltm.platform}</span>
       </aside>
 
-      <section className="editor-placeholder" aria-labelledby="editor-placeholder-heading">
-        <div className="placeholder-content">
-          <span className="placeholder-logo" aria-hidden="true">
-            K
-          </span>
-          <h1 id="editor-placeholder-heading">Editor is not running</h1>
-          <p>OpenVSCode Server will be integrated in Checkpoint 2.</p>
+      <section className="editor-workspace" aria-label="LaTeX editor workspace">
+        <header className="editor-toolbar">
+          <div className="editor-breadcrumbs" aria-label="Current document">
+            <span>Scratch</span>
+            <span aria-hidden="true">/</span>
+            <strong>main.tex</strong>
+          </div>
+          <span className="editor-mode">LaTeX · In memory</span>
+        </header>
+        <div className="editor-content">
+          <LatexEditor onDirtyChange={setIsScratchDirty} />
         </div>
       </section>
 
       <footer className="statusbar">
-        <span>Local workspace</span>
+        <span>
+          {isScratchDirty ? 'Unsaved scratch changes' : 'Scratch document'}
+        </span>
         <span className="status-ready">
           <span className="status-dot" aria-hidden="true" />
-          Ready
+          In memory
         </span>
       </footer>
     </main>
