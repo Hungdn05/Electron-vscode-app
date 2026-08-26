@@ -1,1 +1,41 @@
-# Electron app
+# KLTM Workspace
+
+Desktop workspace for creating, editing, versioning, and synchronizing LaTeX projects.
+
+Checkpoint 1 contains the secure Electron shell. OpenVSCode Server, project management, Git synchronization, authentication, and LaTeX compilation are intentionally deferred to later checkpoints.
+
+## Requirements
+
+- Node.js 24 LTS
+- npm 11 or newer
+- Git
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+If the parent environment sets `ELECTRON_RUN_AS_NODE=1`, remove that variable when launching the desktop process:
+
+```bash
+env -u ELECTRON_RUN_AS_NODE npm run dev
+```
+
+## Verification
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+npm audit --audit-level=high
+```
+
+## Packaging
+
+Packaging commands exist in `package.json`, but distributable builds are not considered supported until the OpenVSCode and LaTeX runtime resources are added and the signing/notarization checkpoint is complete.
+
+## Architecture decisions
+
+- [Electron process boundaries](docs/adr/0001-process-boundaries.md)
